@@ -46,7 +46,12 @@ var BeerMe = React.createClass({
     } else if (this.state.submitting) {
       return <div className="spinner-loader">Submitting...</div>;
     } else {
-      return <h1>{this.state.drink} - {this.state.team}</h1>;
+      return (
+        <div>
+          <h1>{this.state.drink} - {this.state.team}</h1>
+          Your selection has been recorded.
+        </div>
+      );
     }
   }
 });

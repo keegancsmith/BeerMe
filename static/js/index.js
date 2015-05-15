@@ -25,34 +25,56 @@ var BeerMe = React.createClass({
       }.bind(this)
     });
   },
+  handleReset: function() {
+    this.setState(this.getInitialState());
+  },
   getInitialState: function() {
     return {drink: null, team: null, submitting: false};
   },
   render: function() {
+    var main = null;
+    var footer = (
+      <button
+        key={"button-reset"}
+        type="button"
+        className="btn btn-warning"
+        onClick={this.handleReset}
+      >
+        Start Over
+      </button>
+    );
+
     if (this.state.drink === null) {
-      return (
+      main = (
         <SimpleButtonGroup
           labels={this.props.drinks}
           onClick={this.handleDrinkSelect}
         />
       );
     } else if (this.state.team === null) {
-      return (
+      main = (
         <SimpleButtonGroup
           labels={this.props.teams}
           onClick={this.handleTeamSelect}
         />
       );
     } else if (this.state.submitting) {
-      return <div className="spinner-loader">Submitting...</div>;
+      main = <div className="spinner-loader">Submitting...</div>;
+      footer = null;
     } else {
-      return (
+      main = (
         <div>
           <h1>{this.state.drink} - {this.state.team}</h1>
           Your selection has been recorded.
         </div>
       );
     }
+    return (
+      <div>
+        <div className="row">{main}</div>
+        <div className="row">{footer}</div>
+      </div>
+    );
   }
 });
 
@@ -65,7 +87,7 @@ var SimpleButtonGroup = React.createClass({
         <button
           key={"button-" + label}
           type="button"
-          className="btn btn-default"
+          className="btn btn-success"
           onClick={handler}>
           {label}
         </button>
@@ -83,7 +105,7 @@ var drinks = ["Amstel", "Black Label", "Castle"]
 var teams = ["Business Optics", "Siyelo", "Sourcegraph"]
 
 React.render(
-  <div className="well center-block">
+  <div className="well center-block container-fluid">
     <BeerMe drinks={drinks} teams={teams} url="suip" />
   </div>,
   document.getElementById('content')

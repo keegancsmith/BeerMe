@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,9 +12,9 @@ import (
 	"runtime"
 )
 
-type Comment struct {
-	Author string `json:"author"`
-	Text string `json:"text"`
+type Suip struct {
+	Drink string `json:"drink"`
+	Team string `json:"team"`
 }
 
 func staticDir() string {
@@ -27,39 +28,29 @@ func staticDir() string {
 }
 
 func main() {
-	comments := append(make([]Comment, 0),
-		Comment{"Pete Hunt", "This is one comment"},
-		Comment{"Jordan Walke", "This is *another* comment"})
-	
 	flagHost := flag.String("host", "localhost:8080", "host:port")
 	flag.Parse()
 
 	http.Handle("/",
 		http.FileServer(http.Dir(staticDir())))
 
-	http.HandleFunc("/comments.json",
+	http.HandleFunc("/suip",
 		func (w http.ResponseWriter, r *http.Request) {
 			if r.Method == "POST" {
-				var comment Comment
+				var suip Suip
 				body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 				if err != nil {
-					log.Println("Failed to read comment")
+					log.Println("Failed to read request")
 				} else if err := r.Body.Close(); err != nil {
-					log.Println("Failed to close comment stream")
-				} else if err := json.Unmarshal(body, &comment); err != nil {
+					log.Println("Failed to close request")
+				} else if err := json.Unmarshal(body, &suip); err != nil {
 					log.Println(string(body))
-					log.Println("Failed to decode comment")
+					log.Println("Failed to decode drink")
 				} else {
-					log.Println("Adding comment", comment)
-					comments = append(comments, comment)
+					log.Println("Another happy customer", suip)
 				}
 			}
-
-			w.Header().Set("Content-Type", "application/json")
-			enc := json.NewEncoder(w)
-			if err := enc.Encode(comments); err != nil {
-				log.Fatal("Can't encode comments", err)
-			}
+			fmt.Fprintf(w, "\"Enjoy your beverage\"")
 		})
 
 	log.Println("Listening on", *flagHost)

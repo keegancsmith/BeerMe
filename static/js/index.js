@@ -1,28 +1,24 @@
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
-    $.ajax({
-      url: this.props.url,
-      dataType: 'json',
-      cache: false,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.error(this.props.url, status, err.toString());
-      }.bind(this)
-    });
+var BeerMe = React.createClass({
+  handleDrinkSelect: function(drink) {
+    state = this.state;
+    console.assert(state.drink === null && state.team === null);
+    state.drink = drink;
+    this.setState(state);
   },
-  handleCommentSubmit: function(comment) {
-    var comments = this.state.data;
-    var newComments = comments.concat([comment]);
-    this.setState({data: newComments});
+  handleTeamSelect: function(drink) {
+    state = this.state;
+    console.assert(state.drink !== null && state.team === null);
+    state.team = drink;
+    state.submitting = true;
+    this.setState(state);
     $.ajax({
       url: this.props.url,
       dataType: 'json',
       type: 'POST',
-      data: JSON.stringify(comment),
-      success: function(data) {
-        this.setState({data: data});
+      data: JSON.stringify(state),
+      success: function() {
+        state.submitting = false;
+        this.setState(state)
       }.bind(this),
       error: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
@@ -30,71 +26,56 @@ var CommentBox = React.createClass({
     });
   },
   getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
-    this.loadCommentsFromServer();
-    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+    return {drink: null, team: null, submitting: false};
   },
   render: function() {
-    return (
-      <div className="commentBox">
-        <h1>Comments</h1>
-        <CommentList data={this.state.data} />
-        <CommentForm onCommentSubmit={this.handleCommentSubmit} />
-      </div>
-    );
+    if (this.state.drink === null) {
+      return (
+        <SimpleButtonGroup
+          labels={this.props.drinks}
+          onClick={this.handleDrinkSelect}
+        />
+      );
+    } else if (this.state.team === null) {
+      return (
+        <SimpleButtonGroup
+          labels={this.props.teams}
+          onClick={this.handleTeamSelect}
+        />
+      );
+    } else if (this.state.submitting) {
+      return <div className="spinner-loader">Submitting...</div>;
+    } else {
+      return <h1>{this.state.drink} - {this.state.team}</h1>;
+    }
   }
 });
-var CommentList = React.createClass({
+
+var SimpleButtonGroup = React.createClass({
   render: function() {
-    var commentNodes = this.props.data.map(function (comment) {
-      return <Comment author={comment.author}>{comment.text}</Comment>;
+    var onClick = this.props.onClick;
+    var nodes = this.props.labels.map(function (label) {
+      var handler = function() { onClick(label) };
+      return (
+        <button type="button" className="btn btn-default" onClick={handler}>
+          {label}
+        </button>
+      );
     });
     return (
-      <div className="commentList">
-        {commentNodes}
+      <div className="btn-group-vertical" role="group">
+        {nodes}
       </div>
     );
   }
 });
 
-var CommentForm = React.createClass({
-  handleSubmit: function(e) {
-    e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
-    if (!text || !author) {
-      return;
-    }
-    this.props.onCommentSubmit({author: author, text: text})
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
-    return;
-  },
-  render: function() {
-    return (
-      <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="Your name" ref="author" />
-        <input type="text" placeholder="Say something..." ref="text" />
-        <input type="submit" value="Post" />
-      </form>
-    );
-  }
-});
-var Comment = React.createClass({
-  render: function() {
-    return (
-      <div className="comment">
-        <h2 className="commentAuthor">
-          {this.props.author}
-        </h2>
-        {this.props.children}
-      </div>
-    );
-  }
-});
+var drinks = ["Amstel", "Black Label", "Castle"]
+var teams = ["Business Optics", "Siyelo", "Sourcegraph"]
+
 React.render(
-  <CommentBox url="comments.json" pollInterval={2000} />,
+  <div className="well center-block">
+    <BeerMe drinks={drinks} teams={teams} url="suip" />
+  </div>,
   document.getElementById('content')
 );

@@ -57,7 +57,11 @@ var SimpleButtonGroup = React.createClass({
     var nodes = this.props.labels.map(function (label) {
       var handler = function() { onClick(label) };
       return (
-        <button type="button" className="btn btn-default" onClick={handler}>
+        <button
+          key={"button-" + label}
+          type="button"
+          className="btn btn-default"
+          onClick={handler}>
           {label}
         </button>
       );
